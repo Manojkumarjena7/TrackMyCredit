@@ -1,22 +1,20 @@
 # TrackMyCredit
 
-TrackMyCredit is a personal finance intelligence platform designed to help users understand the true cost of credit cards and loans.
+Credit Card Intelligence Platform built with Next.js and Supabase.
 
-## Current Status
+## Phase 1 Completed
 
-Phase 1 Completed ✅
+### Features
 
-### Features Implemented
-
-* User Authentication (Email & Google OAuth)
+* User Authentication (Email + Google OAuth)
 * Supabase Integration
-* Protected Dashboard
+* Dashboard Layout
+* Credit Card Tracking Structure
 * Database Schema
 * Row Level Security (RLS)
-* Analytics Foundation
-* Dashboard Navigation
+* GitHub Repository Setup
 
-### Technology Stack
+### Tech Stack
 
 * Next.js 15
 * TypeScript
@@ -24,47 +22,26 @@ Phase 1 Completed ✅
 * Supabase
 * PostgreSQL
 
+### Current Status
+
+✅ Authentication Working
+
+✅ Dashboard Working
+
+✅ Database Migrations Applied
+
+✅ GitHub Repository Connected
+
 ### Upcoming Features
 
-#### Phase 2
-
-* PDF Upload System
-* Statement Storage
-* Processing Queue
-
-#### Phase 3
-
-* SBI Credit Card Statement Parser
-
-#### Phase 4
-
-* RBL Credit Card Statement Parser
-
-#### Phase 5
-
-* Transaction Categorization
-* Hidden Charge Detection
-
-#### Phase 6
-
-* Analytics Dashboard
+* PDF Statement Upload
+* Statement Parsing
+* Transaction Analysis
+* Hidden Charges Detection
+* Interest & GST Analytics
 * Debt Growth Tracking
-
-#### Phase 7
-
 * Excel / CSV / PDF Export
 
-## Goal
+### Repository
 
-Help users understand:
-
-* Total Spend
-* Interest Paid
-* GST Paid
-* Hidden Charges
-* Rent Payment Charges
-* Education Payment Charges
-* Debt Growth
-* Credit Usage Trends
-
-Built for personal use first, then expanded into a SaaS platform.
+TrackMyCredit - Credit Card, Loan and Hidden Charges Intelligence Platform
