@@ -15,22 +15,21 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
+        setAll(
+          cookiesToSet: Array<{
+            name: string;
+            value: string;
+            options?: any;
+          }>
+        ) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options);
           });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
         },
       },
     }
   );
 
-  // Refresh session — required for Server Components to read auth state
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,13 +40,11 @@ export async function updateSession(request: NextRequest) {
     url.pathname.startsWith("/login") ||
     url.pathname.startsWith("/auth");
 
-  // Redirect unauthenticated users away from protected routes
   if (!user && isDashboard) {
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from login page
   if (user && isAuthRoute && !url.pathname.startsWith("/auth/callback")) {
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
