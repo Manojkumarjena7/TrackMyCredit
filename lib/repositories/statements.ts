@@ -46,9 +46,9 @@ export async function createStatement(
 ): Promise<Statement> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("statements")
-    .insert(insert as any)
+  const { data, error } = await (supabase
+    .from("statements") as any)
+    .insert(insert)
     .select()
     .single();
 
@@ -135,17 +135,52 @@ export async function getStatementById(
  * Update processing_status on a statement (used by the job processor in later phases).
  */
 export async function updateStatementStatus(
-  statementId: string,
-  status: "pending" | "processing" | "complete" | "failed"
+statementId: string,
+status: "pending" | "processing" | "complete" | "failed"
 ): Promise<void> {
-  const supabase = await createClient();
+const supabase = await createClient();
 
-  const { error } = await (supabase as any)
-  .from("statements")
-  .update({ processing_status: status })
-  .eq("id", statementId);
+const statementsTable = supabase.from("statements") as any;
 
-  if (error) {
-    throw new Error(`Failed to update statement status: ${error.message}`);
-  }
+const { error } = await statementsTable
+.update({ processing_status: status })
+.eq("id", statementId);
+
+if (error) {
+throw new Error(`Failed to update statement status: ${error.message}`);
 }
+}
+
+
+/**
+ * Update a statement row with data extracted by the PDF parser.
+ * Called by the processor after successful parsing.
+ */
+export async function updateStatementAfterParsing(
+statementId: string,
+data: {
+statement_month: number;
+statement_year: number;
+opening_balance: number;
+closing_balance: number;
+minimum_due: number;
+total_debits: number;
+total_credits: number;
+processing_status: "complete" | "failed";
+}
+): Promise<void> {
+const supabase = await createClient();
+
+const statementsTable = supabase.from("statements") as any;
+
+const { error } = await statementsTable
+.update(data)
+.eq("id", statementId);
+
+if (error) {
+throw new Error(
+`Failed to update statement ${statementId} after parsing: ${error.message}`
+);
+}
+}
+

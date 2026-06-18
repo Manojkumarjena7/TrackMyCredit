@@ -84,3 +84,26 @@ export async function deleteStorageFile(storagePath: string): Promise<void> {
     console.error(`Storage deletion failed for ${storagePath}:`, error.message);
   }
 }
+
+/**
+ * Download a PDF from Supabase Storage and return it as a Buffer.
+ * Used by the processor to feed the PDF into pdf-parse.
+ */
+export async function downloadStatementFile(
+  storagePath: string
+): Promise<Buffer> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .download(storagePath);
+
+  if (error || !data) {
+    throw new Error(
+      `Failed to download statement from storage: ${error?.message ?? "No data returned"}`
+    );
+  }
+
+  const arrayBuffer = await data.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}

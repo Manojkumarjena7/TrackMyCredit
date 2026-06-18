@@ -1,3 +1,4 @@
+
 import { createClient } from "@/lib/supabase/server";
 import type { ProcessingJob, ProcessingJobInsert } from "@/types";
 
@@ -20,12 +21,7 @@ export async function createProcessingJob(
     completed_at: null,
   };
 
-  const { data, error } = await supabase
-    .from("processing_jobs")
-    .insert(insert as any)
-    .select()
-    .single();
-
+  const { data, error } = await (supabase .from("processing_jobs") as any) .insert(insert) .select() .single();
   if (error) {
     throw new Error(`Failed to create processing job: ${error.message}`);
   }
@@ -80,4 +76,76 @@ export async function getJobById(
   }
 
   return data as ProcessingJob | null;
+}
+
+/**
+ * Mark a job as started.
+ */
+export async function startJob(jobId: string): Promise<void> {
+  const supabase = await createClient();
+
+  
+const jobsTable = supabase.from("processing_jobs") as any;
+
+const { error } = await jobsTable
+  .update({
+    status: "processing",
+    started_at: new Date().toISOString(),
+  })
+  .eq("id", jobId);
+
+
+  if (error) {
+    throw new Error(`Failed to start job ${jobId}: ${error.message}`);
+  }
+}
+
+/**
+ * Mark a job as successfully completed.
+ */
+
+
+export async function completeJob(jobId: string): Promise<void> {
+  const supabase = await createClient();
+
+  
+const jobsTable = supabase.from("processing_jobs") as any;
+
+const { error } = await jobsTable
+  .update({
+    status: "complete",
+    completed_at: new Date().toISOString(),
+  })
+  .eq("id", jobId);
+
+
+
+  if (error) {
+    throw new Error(`Failed to complete job ${jobId}: ${error.message}`);
+  }
+}
+
+
+/**
+ * Mark a job as failed with a descriptive error message.
+ */
+export async function failJob(
+jobId: string,
+errorMessage: string
+): Promise<void> {
+const supabase = await createClient();
+
+const jobsTable = supabase.from("processing_jobs") as any;
+
+const { error } = await jobsTable
+.update({
+status: "failed",
+completed_at: new Date().toISOString(),
+error_message: errorMessage.slice(0, 1000),
+})
+.eq("id", jobId);
+
+if (error) {
+console.error(`Failed to mark job ${jobId} as failed:`, error.message);
+}
 }
