@@ -24,7 +24,7 @@
  *  → Return ProcessorResult with success = false
  */
 
-import pdfParse from "pdf-parse";
+import { extractPdfText } from "@/lib/pdf/extractText";
 import { downloadStatementFile } from "@/lib/supabase/storage";
 import { getStatementById, updateStatementAfterParsing } from "@/lib/repositories/statements";
 import { getLatestJobForStatement, startJob, completeJob, failJob } from "@/lib/repositories/jobs";
@@ -121,34 +121,51 @@ export async function processStatement(
   // All subsequent failures must call failJob() before returning ─────────────
 
   // ── 4. Download PDF ───────────────────────────────────────────────────────
-  let pdfBuffer: Buffer;
+let pdfBuffer: Buffer;
+
+try {
+  pdfBuffer = await downloadStatementFile(statement.storage_path);
+
+  console.log("PDF SIZE:", pdfBuffer.length);
+  console.log(
+    "PDF HEADER:",
+    pdfBuffer.slice(0, 50).toString()
+  );
+} catch (err) {
+  const message =
+    `PDF download failed: ${
+      err instanceof Error ? err.message : String(err)
+    }`;
+
+  await failJob(jobId, message);
+
+  return {
+    success: false,
+    statementId,
+    jobId,
+    bank: null,
+    transactionsInserted: 0,
+    error: message,
+  };
+}
+
+  // ── 5. Extract text ───────────────────────────────────────
+// ── 5. Extract text ───────────────────────────────────────────────────────
+  let extraction: { text: string; pageCount: number };
   try {
-    pdfBuffer = await downloadStatementFile(statement.storage_path);
+    extraction = await extractPdfText(pdfBuffer);
   } catch (err) {
-    const message = `PDF download failed: ${err instanceof Error ? err.message : String(err)}`;
+    const message = err instanceof Error ? err.message : String(err);
     await failJob(jobId, message);
     return { success: false, statementId, jobId, bank: null, transactionsInserted: 0, error: message };
   }
 
-  // ── 5. Extract text ───────────────────────────────────────────────────────
-  let rawText: string;
-  try {
-    const parsed = await pdfParse(pdfBuffer);
-    rawText = parsed.text;
-
-    if (!rawText || rawText.trim().length === 0) {
-      const message =
-        "PDF text extraction returned empty output. " +
-        "The statement may be a scanned image PDF (not machine-readable). " +
-        "Please upload a digitally-generated statement PDF.";
-      await failJob(jobId, message);
-      return { success: false, statementId, jobId, bank: null, transactionsInserted: 0, error: message };
-    }
-  } catch (err) {
-    const message = `PDF text extraction failed: ${err instanceof Error ? err.message : String(err)}`;
-    await failJob(jobId, message);
-    return { success: false, statementId, jobId, bank: null, transactionsInserted: 0, error: message };
-  }
+  const rawText = extraction.text;
+  console.log("===== RAW PDF TEXT START =====");
+  console.log(rawText);
+  console.log("===== RAW PDF TEXT END =====");
+  console.log("TEXT LENGTH:", rawText.length);
+  console.log("PAGE COUNT:", extraction.pageCount);
 
   // ── 6–8. Route, parse header, parse transactions ─────────────────────────
   const parseResult = routeAndParse(rawText, { debug });
@@ -170,20 +187,33 @@ export async function processStatement(
 
   // ── 9. Insert transactions ────────────────────────────────────────────────
   // Soft-delete any previously inserted transactions first (re-process safety)
-  let transactionsInserted = 0;
-  try {
-    await softDeleteTransactionsByStatement(statementId, userId);
-    transactionsInserted = await bulkInsertTransactions(
-      transactions,
-      statementId,
-      userId
-    );
-  } catch (err) {
-    const message = `Transaction storage failed: ${err instanceof Error ? err.message : String(err)}`;
-    await failJob(jobId, message);
-    return { success: false, statementId, jobId, bank, transactionsInserted: 0, error: message };
-  }
+  // ── 9. Insert transactions ────────────────────────────────
+let transactionsInserted = 0;
 
+try {
+  await softDeleteTransactionsByStatement(statementId, userId);
+
+  transactionsInserted = await bulkInsertTransactions(
+    transactions,
+    statementId,
+    userId
+  );
+} catch (err: unknown) {
+  const message = `Transaction storage failed: ${
+    err instanceof Error ? err.message : String(err)
+  }`;
+
+  await failJob(jobId, message);
+
+  return {
+    success: false,
+    statementId,
+    jobId,
+    bank,
+    transactionsInserted: 0,
+    error: message,
+  };
+}
   // ── 10. Update statement with parsed data ─────────────────────────────────
   try {
     await updateStatementAfterParsing(statementId, {

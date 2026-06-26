@@ -69,6 +69,7 @@ export async function uploadStatement(
 
   // ── 2. Parse form fields ──────────────────────────────────────────────
   const file = formData.get("file") as File | null;
+  const pdfPassword = formData.get("pdf_password") as string | null;
   const cardId = formData.get("card_id") as string | null;
   const bankName = formData.get("bank_name") as BankName | null;
   const cardName = formData.get("card_name") as string | null;

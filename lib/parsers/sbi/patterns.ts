@@ -41,7 +41,7 @@ export const SBI_BANK_IDENTIFIER = /SBI\s*Card|STATE\s*BANK\s*OF\s*INDIA/i;
  * Example target text: "Statement Period : 01 Dec 2024 to 31 Dec 2024"
  */
 export const SBI_STATEMENT_PERIOD =
-  /Statement\s+Period\s*[:\-]\s*\d{1,2}\s+\w{3}\s+\d{4}\s+to\s+(\d{1,2}\s+\w{3}\s+\d{4})/i;
+  /Statement\s+Period\s*:\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{2})\s+to\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{2})/i;
 
 /**
  * NEEDS_SAMPLE_PDF
@@ -68,8 +68,7 @@ export const SBI_CARD_NUMBER =
  * Expected: "Opening Balance : 12,345.67" or "Previous Balance : 12,345.67"
  */
 export const SBI_OPENING_BALANCE =
-  /(?:Opening|Previous)\s+Balance\s*[:\-]\s*([\d,]+\.?\d*)/i;
-
+  /(?:Opening|Previous)\s+Balance[\s:\-]*([\d,]+\.\d{2})/i;
 // ─── Closing balance ─────────────────────────────────────────────────────────
 
 /**
@@ -77,7 +76,8 @@ export const SBI_OPENING_BALANCE =
  * Expected: "Closing Balance : 23,456.78" or "Total Amount Due : 23,456.78"
  */
 export const SBI_CLOSING_BALANCE =
-  /(?:Closing|Total\s+Amount\s+Due)\s*[:\-]\s*([\d,]+\.?\d*)/i;
+  /(?:Closing\s+Balance|Total\s+Outstanding)[\s:\-]*([\d,]+\.\d{2})/i;
+
 
 // ─── Minimum amount due ──────────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ export const SBI_CLOSING_BALANCE =
  * Expected: "Minimum Amount Due : 1,234.56" or "Min. Due : 1,234.56"
  */
 export const SBI_MINIMUM_DUE =
-  /Min(?:imum)?\.?\s+(?:Amount\s+)?Due\s*[:\-]\s*([\d,]+\.?\d*)/i;
+  /Minimum\s+Amount\s+Due[\s:\-]*([\d,]+\.\d{2})/i;
 
 // ─── Total amount due ────────────────────────────────────────────────────────
 
@@ -96,7 +96,7 @@ export const SBI_MINIMUM_DUE =
  * Note: May overlap with closing balance on some SBI formats.
  */
 export const SBI_TOTAL_AMOUNT_DUE =
-  /Total\s+Amount\s+Due\s*[:\-]\s*([\d,]+\.?\d*)/i;
+  /Total\s+Amount\s+Due[\s:\-]*([\d,]+\.\d{2})/i;
 
 // ─── Payment due date ─────────────────────────────────────────────────────────
 
@@ -136,7 +136,7 @@ export const SBI_TRANSACTION_ROW =
  * Global version of the transaction row pattern for matchAll().
  */
 export const SBI_TRANSACTION_ROW_GLOBAL =
-  /^(\d{1,2}\s+\w{3}\s+\d{2,4})\s{2,}(.+?)\s{2,}([\d,]+\.\d{2})\s*(Cr)?$/gim;
+/(\d{2}\s+[A-Za-z]{3}\s+\d{2})\s+(.+?)\s+([\d,]+\.\d{2})\s+([CDM])/g;
 
 // ─── Section delimiters ──────────────────────────────────────────────────────
 

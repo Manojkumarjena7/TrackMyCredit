@@ -69,18 +69,23 @@ async function main() {
 
   const buffer = fs.readFileSync(filePath);
 
-  let result;
-  try {
-    result = await pdfParse(buffer);
-  } catch (err) {
-    console.error(
-      `❌ pdf-parse failed: ${err instanceof Error ? err.message : String(err)}`
-    );
-    console.error(
-      "\nThis may mean the PDF is password-protected or corrupted."
-    );
-    process.exit(1);
-  }
+    let result: any;
+
+    try {
+      result = await pdfParse(buffer);
+    } catch (err) {
+      console.error(
+        `❌ pdf-parse failed: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
+
+      console.error(
+        "\nThis may mean the PDF is password-protected or corrupted."
+      );
+
+      process.exit(1);
+    }
 
   if (!result.text || result.text.trim().length === 0) {
     console.error(
@@ -91,7 +96,9 @@ async function main() {
     process.exit(1);
   }
 
-  console.error(`✅ Extracted ${result.text.length} characters from ${result.numpages} page(s)\n`);
+  console.error(
+  `✅ Extracted ${result.text.length} characters\n`
+  );
   console.error("─".repeat(60));
   console.error("EXTRACTED TEXT OUTPUT:");
   console.error("─".repeat(60) + "\n");

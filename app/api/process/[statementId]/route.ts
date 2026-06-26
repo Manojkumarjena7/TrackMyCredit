@@ -61,7 +61,11 @@ export async function POST(
   // ── Process ────────────────────────────────────────────────────────────────
   try {
     const result = await processStatement(statementId, user.id);
-
+    console.log(
+  "PROCESS RESULT:",
+  JSON.stringify(result, null, 2)
+);
+    
     if (!result.success) {
       return NextResponse.json(result, { status: 400 });
     }

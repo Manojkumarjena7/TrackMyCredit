@@ -45,7 +45,13 @@ export class SBIParser extends BaseParser {
   // ─── Header ────────────────────────────────────────────────────────────────
 
   parseHeader(text: string): ParsedHeader {
-    this.log("Parsing header");
+  this.log("Parsing header");
+
+  console.log("===== HEADER PREVIEW =====");
+  console.log(text.substring(0, 3000));
+  console.log("===== END HEADER PREVIEW =====");
+
+  // existing code...
 
     // ── Statement period ───────────────────────────────────────────────────
     let statementMonth: number;
@@ -81,10 +87,17 @@ export class SBIParser extends BaseParser {
 
     // ── Balances ───────────────────────────────────────────────────────────
     const openingMatch = text.match(SBI_OPENING_BALANCE);
-    const closingBalMatch = text.match(SBI_CLOSING_BALANCE);
-    const minDueMatch = text.match(SBI_MINIMUM_DUE);
-    const totalDueMatch = text.match(SBI_TOTAL_AMOUNT_DUE);
-    const paymentDueDateMatch = text.match(SBI_PAYMENT_DUE_DATE);
+  const closingBalMatch = text.match(SBI_CLOSING_BALANCE);
+  const minDueMatch = text.match(SBI_MINIMUM_DUE);
+  const totalDueMatch = text.match(SBI_TOTAL_AMOUNT_DUE);
+  const paymentDueDateMatch = text.match(SBI_PAYMENT_DUE_DATE);
+
+  console.log("OPENING BALANCE MATCH:", openingMatch);
+  console.log("CLOSING BALANCE MATCH:", closingBalMatch);
+  console.log("MINIMUM DUE MATCH:", minDueMatch);
+  console.log("TOTAL DUE MATCH:", totalDueMatch);
+  console.log("PAYMENT DUE DATE MATCH:", paymentDueDateMatch);
+    
 
     const openingBalance = this.parseNumeric(openingMatch?.[1]);
     const closingBalance = this.parseNumeric(closingBalMatch?.[1]);
@@ -139,8 +152,16 @@ export class SBIParser extends BaseParser {
     this.log("Transaction section length", transactionSection.length);
 
     const transactions: RawTransaction[] = [];
-    const matches = transactionSection.matchAll(SBI_TRANSACTION_ROW_GLOBAL);
+    const matches = [...transactionSection.matchAll(SBI_TRANSACTION_ROW_GLOBAL)];
 
+console.log("TRANSACTION SECTION:");
+console.log(transactionSection);
+
+console.log("MATCH COUNT:", matches.length);
+
+matches.slice(0, 10).forEach((m, index) => {
+  console.log(`MATCH ${index + 1}:`, m);
+});
     for (const match of matches) {
       const [, dateRaw, descriptionRaw, amountRaw, crFlag] = match;
 
@@ -158,7 +179,17 @@ export class SBIParser extends BaseParser {
 
       const { amount, isCredit: amountHasCrSuffix } =
         this.parseAmount(amountRaw);
-      const isCredit = !!crFlag || amountHasCrSuffix;
+
+      console.log("DATE:", dateRaw);
+      console.log("DESC:", description);
+      console.log("AMOUNT RAW:", amountRaw);
+      console.log("CR FLAG:", crFlag);
+      console.log("AMOUNT HAS CR:", amountHasCrSuffix);
+
+      const flag = (crFlag || "").trim().toUpperCase();
+
+      const isCredit =
+        flag === "C" || amountHasCrSuffix;
 
       if (amount === 0) {
         this.log("Skipping row — zero amount", match[0]);

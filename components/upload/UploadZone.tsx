@@ -140,23 +140,46 @@ export function UploadZone({ existingCards }: UploadZoneProps) {
     setUploadState({ phase: "uploading" });
 
     startTransition(async () => {
-      const result = await uploadStatement(formData);
+  const result = await uploadStatement(formData);
 
-      if (result.success && result.statementId) {
-        setUploadState({ phase: "success", statementId: result.statementId });
-        // Redirect to statements list after a brief success flash
+  console.log("UPLOAD RESULT:", result);
+
+  if (result.success && result.statementId) {
+    console.log("CALLING PROCESS API:", result.statementId);
+
+    try {
+      const response = await fetch(
+        `/api/process/${result.statementId}`,
+        {
+          method: "POST",
+        }
+      );
+
+      console.log("PROCESS STATUS:", response.status);
+
+      const data = await response.json();
+      console.log("PROCESS RESPONSE:", data);
+    } catch (err) {
+      console.error("Processor trigger failed:", err);
+    }
+
+    setUploadState({
+      phase: "success",
+      statementId: result.statementId,
+    });
+
         setTimeout(() => {
-          router.push("/dashboard/statements");
-          router.refresh();
-        }, 1800);
-      } else {
-        setUploadState({
-          phase: "error",
-          message: result.error ?? "Upload failed. Please try again.",
-        });
-      }
+      router.push("/dashboard/statements");
+      router.refresh();
+    }, 1800);
+  } else {
+    setUploadState({
+      phase: "error",
+      message: result.error ?? "Upload failed. Please try again.",
     });
   }
+});
+}
 
   // ── Render ─────────────────────────────────────────────────────────────
 
